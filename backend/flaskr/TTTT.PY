@@ -13,19 +13,7 @@ def create_app(test_config=None):
   app = Flask(__name__)
   setup_db(app)
   CORS(app)
-
-  Question_Per_Page = 10
-  def paginate_questions(request, selection):
-    page = request.args.get('page', 1, type=int)
-    start = (page - 1) * Question_Per_Page 
-    end = start + QUESTIONS_PER_PAGE 
-    questions = [question.format() for question in selection]
-    current_questions = questions[start:end]
-    return current_questions
   
-
-
-
   '''
   @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
   '''
@@ -76,17 +64,18 @@ def create_app(test_config=None):
     formatted_categories = {}
     for i in range(len(categories)):
       formatted_categories[categories[i].id] = categories[i].type
-    
-    selection = Question.query.order_by(Question.id).all()
+    selection = Question.order_by(Question.id).all()
     current_questions = paginate_questions(request, selection)
     if len(current_questions)==0:
       abort(404)  
     return jsonify({
       'success': True,
-      'questions': current_questions,
-      'total_questions': len(Question.query.all()),
+      'questions': formatted_questions[start:end],
+      'total_questions': len(questions),
       'categories': formatted_categories
     })
+
+
   '''
   @TODO: 
   Create an endpoint to DELETE question using a question ID. 
@@ -94,20 +83,20 @@ def create_app(test_config=None):
   TEST: When you click the trash icon next to a question, the question will be removed.
   This removal will persist in the database and when you refresh the page. 
   '''
-  @app.route('/questions/<int:question_id>', methods=['DELETE'])
+  @app.route('questions/<int:question_id>', methods=['DELETE'])
   def delete_question(question_id):
-    question = Question.query.filter(Question.id == question_id).one_or_none()
-    if question is None:
-      abort(404)
-    question.delete()
-    selection = Question.query.order_by(Question.id).all()
-    current_questions = paginate_questions(request, selection)
-    return jsonify({
-      'success': True,
-      'questions': current_questions,
-      'total_questions': len(Question.query.all()) 
+    try:
+      question = Question.query.filter(Question.id == question_id).one_or_none()
+      if question is None:
+        abort(404)
+      question.delete()
+      selection = Question.query.order_by(Question.id).all()
+      current_questions = paginate_questions(request, selection)
+      return jsonify({
+        'success': True,
+        'questions': current_questions,
+        'total_questions': len(Question.query.all()) 
       })
-
 
 
 
@@ -160,6 +149,16 @@ def create_app(test_config=None):
   Create error handlers for all expected errors 
   including 404 and 422. 
   '''
+  QUESTIONS_PER_PAGE = 10
+  def paginate_questions(request, selection):
+    page = request.args.get('page', 1, type=int)
+    start = (page - 1) * Question_Per_Page 
+    end = start + QUESTIONS_PER_PAGE 
+    questions = [question.format() for question in selection]
+    current_questions = questions[start:end]
+    return current_questions
+
+
   @app.route('/')
   def index():
     return ('hello world')
