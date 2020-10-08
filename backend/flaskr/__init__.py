@@ -55,7 +55,6 @@ def create_app(test_config=None):
         formated_categories[categories[index].id] = categories[index].type
     except:
       pass
-    print('----------------------------------------------------->', categories)
     return(jsonify({
       'success': True,
       'categories': formated_categories
@@ -124,8 +123,17 @@ def create_app(test_config=None):
   the form will clear and the question will appear at the end of the last page
   of the questions list in the "List" tab.  
   '''
-  @app.route('/questions/add', methods=['GET'])
+  @app.route('/questions', methods=['POST'])
   def add_question():
+    data = request.json
+    
+    new_question = Question(data['question'], data['answer'], data['difficulty'],data['category'])
+    try:
+      Question.insert(new_question)
+    except:
+      pass
+    
+
     return jsonify({
       'success': True,
       'categories': {'1': 'first'}
