@@ -50,9 +50,12 @@ def create_app(test_config=None):
   def get_categories():
     try:
       categories = Category.query.all()
-      formated_categories = [category.format() for category in categories]
+      formated_categories = {}
+      for index in range(len(categories)):
+        formated_categories[categories[index].id] = categories[index].type
     except:
-      print('------------>', 'Faild')
+      pass
+    print('----------------------------------------------------->', categories)
     return(jsonify({
       'success': True,
       'categories': formated_categories
@@ -121,7 +124,13 @@ def create_app(test_config=None):
   the form will clear and the question will appear at the end of the last page
   of the questions list in the "List" tab.  
   '''
-
+  @app.route('/questions/add', methods=['GET'])
+  def add_question():
+    return jsonify({
+      'success': True,
+      'categories': {'1': 'first'}
+      })
+      
   '''
   @TODO: 
   Create a POST endpoint to get questions based on a search term. 
