@@ -179,8 +179,21 @@ def create_app(test_config=None):
   categories in the left column will cause only questions of that 
   category to be shown. 
   '''
+  @app.route('/categories/<int:category_id>/questions')
+  def retrieve_questions_by_category_id(category_id):
+    print('-------------> cat id :', category_id)
+    questions = Question.query.filter(Question.category == category_id).all()
 
 
+    selection = Question.query.filter(Question.category == category_id).order_by(Question.id).all()
+    current_questions = paginate_questions(request, selection)
+    if len(current_questions)==0:
+      abort(404)  
+    return jsonify({
+      'success': True,
+      'questions': current_questions,
+      'total_questions': len(Question.query.filter(Question.category == category_id).all()),
+    })
   '''
   @TODO: 
   Create a POST endpoint to get questions to play the quiz. 
