@@ -125,19 +125,34 @@ def create_app(test_config=None):
   '''
   @app.route('/questions', methods=['POST'])
   def add_question():
+    print('----------------------------> Triggered')
     data = request.json
-    
-    new_question = Question(data['question'], data['answer'], data['difficulty'],data['category'])
-    try:
-      Question.insert(new_question)
-    except:
-      pass
-    
-
-    return jsonify({
-      'success': True,
-      'categories': {'1': 'first'}
+    if data['searchTerm']:
+      categories = Category.query.all()
+      formatted_categories = {}
+      for i in range(len(categories)):
+        formatted_categories[categories[i].id] = categories[i].type
+      selection = Question.query.filter(Question.question.contains(data['searchTerm'])).all()
+      current_questions = paginate_questions(request, selection)
+      if len(current_questions)==0:
+        abort(404)  
+      return jsonify({
+        'success': True,
+        'questions': current_questions,
+        'total_questions': len(selection),
+        'categories': formatted_categories
       })
+
+    else:
+      new_question = Question(data['question'], data['answer'], data['difficulty'],data['category'])
+      try:
+        Question.insert(new_question)
+      except:
+        pass
+      return jsonify({
+        'success': True,
+        'categories': {'1': 'first'}
+        })
       
   '''
   @TODO: 
@@ -149,6 +164,12 @@ def create_app(test_config=None):
   only question that include that string within their question. 
   Try using the word "title" to start. 
   '''
+
+  @app.route('/questions/search')
+  def search_questions():
+    return jsonify({
+      'questions':[{}]
+    })
 
   '''
   @TODO: 
