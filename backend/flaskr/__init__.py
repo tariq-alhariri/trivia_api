@@ -127,8 +127,9 @@ def create_app(test_config=None):
   @app.route('/questions', methods=['POST'])
   def add_question():
     print('----------------------------> Triggered')
-    data = request.json
-    if 'searchTerm' in data:
+    data = request.get_json()
+    searchTerm = data.get('searchTerm', None)
+    if searchTerm:
       categories = Category.query.all()
       formatted_categories = {}
       for i in range(len(categories)):
@@ -145,14 +146,13 @@ def create_app(test_config=None):
       })
 
     else:
-      new_question = Question(data['question'], data['answer'], data['difficulty'],data['category'])
+      new_question = Question(question= data.get('question', None),answer= data.get('answer', None),category= data.get('category', None),difficulty= data.get('difficulty', None))
       try:
         Question.insert(new_question)
       except:
         pass
       return jsonify({
         'success': True,
-        'categories': {'1': 'first'}
         })
       
   '''
@@ -233,6 +233,28 @@ def create_app(test_config=None):
   Create error handlers for all expected errors 
   including 404 and 422. 
   '''
+
+  @app.errorhandler(404)
+  def not_found(error):
+    return jsonify({
+      'success': False,
+      'error': 404,
+      'message': 'source not found'
+    }), 404
+
+
+  @app.errorhandler(404)
+  def unprocessable(error):
+    return jsonify({
+      'success': False,
+      'error': 422,
+      'message': 'source not found'
+    }), 422
+
+
+
+
+
   @app.route('/')
   def index():
     return ('hello world')
