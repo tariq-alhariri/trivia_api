@@ -106,6 +106,7 @@ def create_app(test_config=None):
     current_questions = paginate_questions(request, selection)
     return jsonify({
       'success': True,
+      'deleted': question_id,
       'questions': current_questions,
       'total_questions': len(Question.query.all()) 
       })
@@ -127,7 +128,7 @@ def create_app(test_config=None):
   def add_question():
     print('----------------------------> Triggered')
     data = request.json
-    if data['searchTerm']:
+    if 'searchTerm' in data:
       categories = Category.query.all()
       formatted_categories = {}
       for i in range(len(categories)):
@@ -205,7 +206,28 @@ def create_app(test_config=None):
   one question at a time is displayed, the user is allowed to answer
   and shown whether they were correct or not. 
   '''
-
+  @app.route('/quizzes', methods=['POST'])
+  def quiz():
+    list_of_question = []
+    print('------------------------> triggred')
+    data = request.json
+    category_id = data['quiz_category']['id']
+    print('---------------------------------------> data', data['quiz_category']['id'])
+    if  category_id ==0:
+      questions = Question.query.order_by(Question.id).all()
+    else:
+      questions = Question.query.filter(Question.category == category_id).order_by(Question.id).all()
+    i=0
+    while i<1:
+      question = random.choice(questions)
+      if question not in list_of_question :
+        list_of_question.append(question) 
+        i=1
+    print('------------------------------------> the question', question)
+    return jsonify({
+      'success': True, 
+      'question': {'id': question.id, 'question': question.question, 'answer': question.answer}
+    })
   '''
   @TODO: 
   Create error handlers for all expected errors 
