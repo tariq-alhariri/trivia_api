@@ -19,6 +19,8 @@ def create_app(test_config=None):
     page = request.args.get('page', 1, type=int)
     start = (page - 1) * Question_Per_Page 
     end = start + QUESTIONS_PER_PAGE 
+    if start >len(selection):
+      abort(404)
     questions = [question.format() for question in selection]
     current_questions = questions[start:end]
     return current_questions
@@ -126,9 +128,8 @@ def create_app(test_config=None):
   '''
   @app.route('/questions', methods=['POST'])
   def add_question():
-    print('----------------------------> Triggered')
     data = request.get_json()
-    searchTerm = data.get('searchTerm', None)
+    searchTerm = data.get('searchTerm',None)
     if searchTerm:
       categories = Category.query.all()
       formatted_categories = {}
@@ -150,7 +151,7 @@ def create_app(test_config=None):
       try:
         Question.insert(new_question)
       except:
-        pass
+        abort(422)
       return jsonify({
         'success': True,
         })
@@ -242,14 +243,31 @@ def create_app(test_config=None):
       'message': 'source not found'
     }), 404
 
-
   @app.errorhandler(404)
-  def unprocessable(error):
+  def not_found(error):
     return jsonify({
       'success': False,
-      'error': 422,
+      'error': 404,
       'message': 'source not found'
-    }), 422
+    }), 404
+
+
+  @app.errorhandler(404)
+  def bad_request(error):
+    return jsonify({
+      'success': False,
+      'error': 400,
+      'message': 'bad request'
+    }), 400
+
+
+  @app.errorhandler(404)
+  def method_not_allowed(error):
+    return jsonify({
+      'success': False,
+      'error': 405,
+      'message': 'Method Not Allowed'
+    }), 405
 
 
 
@@ -258,6 +276,7 @@ def create_app(test_config=None):
   @app.route('/')
   def index():
     return ('hello world')
+
   return app
 
     
