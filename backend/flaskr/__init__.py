@@ -24,10 +24,16 @@ def create_app(test_config=None):
     questions = [question.format() for question in selection]
     current_questions = questions[start:end]
     return current_questions
-  
 
-
-
+    # This method id added to sort list od categories
+  def format_categories(categories):
+    if len(categories) ==0:
+      abort(404)
+    format_categories = {}
+    index = 0
+    for index in range(len(categories)):
+      format_categories[categories[index].id] = categories[index].type
+    return format_categories
   '''
   @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
   '''
@@ -51,17 +57,14 @@ def create_app(test_config=None):
   @app.route('/categories', methods=['GET'])
   def get_categories():
     try:
-      categories = Category.query.all()
+      categories = Category.query.order_by(Category.type).all()
       if len(categories) ==0:
         abort(404)
-      formated_categories = {}
-      for index in range(len(categories)):
-        formated_categories[categories[index].id] = categories[index].type    
     except:
       abort(500)
     return(jsonify({
       'success': True,
-      'categories': formated_categories,
+      'categories': format_categories(categories),
       'status_code': 200
       })), 200
 
@@ -79,10 +82,12 @@ def create_app(test_config=None):
   '''
   @app.route('/questions')
   def retrieve_questions():
-    categories = Category.query.all()
-    formatted_categories = {}
-    for i in range(len(categories)):
-      formatted_categories[categories[i].id] = categories[i].type
+    try:
+      categories = Category.query.order_by(Category.type).all()
+      if len(categories) ==0:
+        abort(404)
+    except:
+      abort(500)
     
     selection = Question.query.order_by(Question.id).all()
     current_questions = paginate_questions(request, selection)
@@ -92,7 +97,8 @@ def create_app(test_config=None):
       'success': True,
       'questions': current_questions,
       'total_questions': len(Question.query.all()),
-      'categories': formatted_categories
+      'categories': format_categories(categories),
+      'current_category': None
     })
   '''
   @TODO: 
