@@ -2,7 +2,7 @@ import os
 from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-import random
+import random, operator
 
 from models import setup_db, Question, Category
 
@@ -52,15 +52,18 @@ def create_app(test_config=None):
   def get_categories():
     try:
       categories = Category.query.all()
+      if len(categories) ==0:
+        abort(404)
       formated_categories = {}
       for index in range(len(categories)):
-        formated_categories[categories[index].id] = categories[index].type
+        formated_categories[categories[index].id] = categories[index].type    
     except:
-      pass
+      abort(500)
     return(jsonify({
       'success': True,
-      'categories': formated_categories
-      }))
+      'categories': formated_categories,
+      'status_code': 200
+      })), 200
 
   '''
   @TODO: 
@@ -253,7 +256,7 @@ def create_app(test_config=None):
     }), 404
 
 
-  @app.errorhandler(404)
+  @app.errorhandler(400)
   def bad_request(error):
     return jsonify({
       'success': False,
@@ -262,13 +265,21 @@ def create_app(test_config=None):
     }), 400
 
 
-  @app.errorhandler(404)
+  @app.errorhandler(405)
   def method_not_allowed(error):
     return jsonify({
       'success': False,
       'error': 405,
       'message': 'Method Not Allowed'
     }), 405
+
+  @app.errorhandler(500)
+  def method_not_allowed(error):
+    return jsonify({
+      'success': False,
+      'error': 500,
+      'message': 'internal server error'
+    }), 500
 
 
 
