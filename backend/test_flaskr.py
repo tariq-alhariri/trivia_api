@@ -40,6 +40,27 @@ class FlaskrTestCase(unittest.TestCase):
         self.assertEqual(data['success'], True)
         self.assertTrue(data['total_questions'])
 
+
+    def test_add_question(self):
+        res = self.client().post('/questions', json = {
+            'question': 'What is your age?',
+            'answer': 33,
+            'category': 1,
+            'difficulty': 5})
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 201)
+        self.assertEqual(data['success'], True)
+
+    def test_delete_question(self):
+        question = Question.query.order_by(Question.id.desc()).first()
+        res = self.client().delete('/questions/' + str(question.id))
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertTrue(data['total_questions'])
+        self.assertTrue(data['questions'])
+
+
        
 
 
