@@ -121,7 +121,7 @@ def create_app(test_config=None):
         'total_questions': len(Question.query.all())
         }), 200
     except:
-      abort(404)
+      abort(422)
 
 
 
@@ -156,19 +156,22 @@ def create_app(test_config=None):
           'categories': formatted_categories
         })
       except:
-        abort(422)
+        abort(404)
 
     else:
-      new_question = Question(question= data.get('question', None),answer= data.get('answer', None),category= data.get('category', None),difficulty= data.get('difficulty', None))
-      try:
-        Question.insert(new_question)
-        return jsonify({
-        'success': True,
-        'status_code': 201,
-        'question_id': new_question.id,
-        }), 201
-      except:
-        abort(422)
+        if (data.get('question') and data.get('answer') and data.get('category') and data.get('difficulty')):
+          new_question = Question(question= data.get('question', None),answer= data.get('answer', None),category= data.get('category', None),difficulty= data.get('difficulty', None))
+          try:
+            Question.insert(new_question)
+            return jsonify({
+            'success': True,
+            'status_code': 201,
+            'question_id': new_question.id,
+            }), 201
+          except:
+            abort(422)
+        else:
+          abort(422)
 
       
   '''
@@ -210,7 +213,7 @@ def create_app(test_config=None):
   @app.route('/categories/<int:category_id>/questions', methods=['GET'])
   def retrieve_questions_by_category_id(category_id):
     try:
-      category = Category.get(Category.id == category_id)
+      category = Category.query.get(category_id)
     except:
       abort(404)
     
@@ -224,9 +227,9 @@ def create_app(test_config=None):
         'success': True,
         'questions': current_questions,
         'total_questions': len(Question.query.filter(Question.category == category_id).all()),
-      })
+      }), 200
     except:
-      abort(422)
+      abort(404)
   '''
   @TODO: 
   Create a POST endpoint to get questions to play the quiz. 
@@ -238,26 +241,32 @@ def create_app(test_config=None):
   one question at a time is displayed, the user is allowed to answer
   and shown whether they were correct or not. 
   '''
+
   @app.route('/quizzes', methods=['POST'])
   def have_a_quiz():
     try:
-      list_of_question = []
       data = request.json
+      if not ('previous_questions' in data and 'quiz_category' in data):
+        abort(422)
       category_id = data['quiz_category']['id']
+      previous_questions = data['previous_questions']
       if  category_id ==0:
         questions = Question.query.order_by(Question.id).all()
       else:
         questions = Question.query.filter(Question.category == category_id).order_by(Question.id).all()
+
+      
       i=0
       while i<1:
         question = random.choice(questions)
-        if question not in list_of_question :
-          list_of_question.append(question) 
+        if question not in previous_questions :
+          previous_questions.append(question) 
           i=1
       return jsonify({
+        'status_code': 200,
         'success': True, 
-        'question': {'id': question.id, 'question': question.question, 'answer': question.answer}
-      })
+        'question': {'id': question.id, 'question': question.question, 'answer': question.answer},
+      }), 200
     except:
       abort(422)
   '''
