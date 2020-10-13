@@ -88,7 +88,6 @@ def create_app(test_config=None):
         abort(404)
     except:
       abort(500)
-    
     selection = Question.query.order_by(Question.id).all()
     current_questions = paginate_questions(request, selection)
     if len(current_questions)==0:
@@ -109,18 +108,22 @@ def create_app(test_config=None):
   '''
   @app.route('/questions/<int:question_id>', methods=['DELETE'])
   def delete_question(question_id):
-    question = Question.query.filter(Question.id == question_id).one_or_none()
-    if question is None:
-      abort(404)
-    question.delete()
-    selection = Question.query.order_by(Question.id).all()
-    current_questions = paginate_questions(request, selection)
-    return jsonify({
-      'success': True,
-      'deleted': question_id,
-      'questions': current_questions,
-      'total_questions': len(Question.query.all()) 
-      })
+    try:
+      question = Question.query.filter(Question.id == question_id).one_or_none()
+      if question is None:
+        abort(404)
+      question.delete()
+      selection = Question.query.order_by(Question.id).all()
+      current_questions = paginate_questions(request, selection)
+      return jsonify({
+        'status_code': 200,
+        'success': True,
+        'deleted': question_id,
+        'questions': current_questions,
+        'total_questions': len(Question.query.all()) 
+        }), 200
+    except:
+      abort(422)
 
 
 
@@ -140,31 +143,35 @@ def create_app(test_config=None):
     data = request.get_json()
     searchTerm = data.get('searchTerm',None)
     if searchTerm:
-      categories = Category.query.all()
-      formatted_categories = {}
-      for i in range(len(categories)):
-        formatted_categories[categories[i].id] = categories[i].type
-      selection = Question.query.filter(Question.question.contains(data['searchTerm'])).all()
-      current_questions = paginate_questions(request, selection)
-      if len(current_questions)==0:
-        abort(404)  
-      return jsonify({
-        'success': True,
-        'questions': current_questions,
-        'total_questions': len(selection),
-        'categories': formatted_categories
-      })
+      try:
+
+        categories = Category.query.all()
+        formatted_categories = format_categories(categories)
+        selection = Question.query.filter(Question.question.contains(data['searchTerm'])).all()
+        current_questions = paginate_questions(request, selection)
+        if len(current_questions)==0:
+          abort(404)  
+        return jsonify({
+          'success': True,
+          'questions': current_questions,
+          'total_questions': len(selection),
+          'categories': formatted_categories
+        })
+      except:
+        abort(422)
 
     else:
       new_question = Question(question= data.get('question', None),answer= data.get('answer', None),category= data.get('category', None),difficulty= data.get('difficulty', None))
       try:
         Question.insert(new_question)
+        return jsonify({
+        'success': True,
+        'status_code': 201,
+        'question_id': new_question.id,
+        }), 201
       except:
         abort(422)
-      return jsonify({
-        'success': True,
-        'status_code': 201
-        }), 201
+
       
   '''
   @TODO: 
@@ -177,11 +184,23 @@ def create_app(test_config=None):
   Try using the word "title" to start. 
   '''
 
-  @app.route('/questions/search')
+  @app.route('/questions/search', methods=['POST'])
   def search_questions():
-    return jsonify({
-      'questions':[{}]
-    })
+    print('----------------->')
+    body = request.get_json()
+    search_term = body.get('searchTerm', None)
+
+    if search_term:
+        search_results = Question.query.filter(
+            Question.question.ilike(f'%{search_term}%')).all()
+
+        return jsonify({
+            'success': True,
+            'questions': [question.format() for question in search_results],
+            'total_questions': len(search_results),
+            'current_category': None
+        })
+    abort(404)
 
   '''
   @TODO: 
@@ -253,14 +272,6 @@ def create_app(test_config=None):
       'message': 'source not found'
     }), 404
 
-  @app.errorhandler(404)
-  def not_found(error):
-    return jsonify({
-      'success': False,
-      'error': 404,
-      'message': 'source not found'
-    }), 404
-
 
   @app.errorhandler(400)
   def bad_request(error):
@@ -286,6 +297,14 @@ def create_app(test_config=None):
       'error': 500,
       'message': 'internal server error'
     }), 500
+
+  @app.errorhandler(422)
+  def method_not_allowed(error):
+    return jsonify({
+      'success': False,
+      'error': 422,
+      'message': 'Unprocessable Entity'
+    }), 422
 
 
 
