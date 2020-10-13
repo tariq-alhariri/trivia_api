@@ -20,11 +20,26 @@ class FlaskrTestCase(unittest.TestCase):
             'category': 'science',
             'difficulty': 5
         }
-    '''
+    
     def tearDown(self):
         """Executed after each test"""
         pass
-    '''
+    
+
+
+    def test_get_categories(self):
+        res = self.client().get('/categories')
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertTrue(data['categories'])
+
+    def test_get_non_existed_categories(self):
+        res = self.client().get('/categories/1000/questions')
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(data['success'], False)
+        self.assertTrue(data['message'], 'resource not found')
 
     def test_get_paginated_questions(self):
         res = self.client().get('/questions')
@@ -32,6 +47,17 @@ class FlaskrTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
         self.assertTrue(data['total_questions'])
+        self.assertTrue(data['categories'])
+        self.assertTrue(data['questions'])
+
+    def test_get_notfound_pages_of_questions(self):
+        res = self.client().get('/questions/?page=10000')
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(data['message'], 'resource not found')
+
+
+
 
     def test_search_questions(self):
         res = self.client().post('/questions', json = {'searchTerm': 'age'})
@@ -42,14 +68,18 @@ class FlaskrTestCase(unittest.TestCase):
 
 
     def test_add_question(self):
+        num_of_questions_before_adding = len(Question.query.all())
         res = self.client().post('/questions', json = {
             'question': 'What is your age?',
             'answer': 33,
             'category': 1,
             'difficulty': 5})
+        num_of_questions_after_adding = len(Question.query.all())
         data = json.loads(res.data)
         self.assertEqual(res.status_code, 201)
         self.assertEqual(data['success'], True)
+        self.assertEqual(num_of_questions_after_adding, num_of_questions_before_adding +1)
+
 
     def test_delete_question(self):
         question = Question.query.order_by(Question.id.desc()).first()
@@ -59,6 +89,14 @@ class FlaskrTestCase(unittest.TestCase):
         self.assertEqual(data['success'], True)
         self.assertTrue(data['total_questions'])
         self.assertTrue(data['questions'])
+        self.assertEqual(data['deleted'], question.id)
+
+    def test_delete_unexisted_question(self):
+        res = self.client().delete('/questions/1000')
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(data['success'], False)
+        self.assertTrue(data['message'], 'resource not found')
 
 
        
