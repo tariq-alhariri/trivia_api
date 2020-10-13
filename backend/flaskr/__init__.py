@@ -147,7 +147,7 @@ def create_app(test_config=None):
 
         categories = Category.query.all()
         formatted_categories = format_categories(categories)
-        selection = Question.query.filter(Question.question.contains(data['searchTerm'])).all()
+        selection = Question.query.filter(Question.question.contains(data['searchTerm'])).order_by(Question.id).all()
         current_questions = paginate_questions(request, selection)
         if len(current_questions)==0:
           abort(404)  
