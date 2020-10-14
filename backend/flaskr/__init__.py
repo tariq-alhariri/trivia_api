@@ -2,8 +2,7 @@ import os
 from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-import random
-import operator
+import random, operator
 from models import setup_db, Question, Category
 
 QUESTIONS_PER_PAGE = 10
@@ -198,7 +197,9 @@ def create_app(test_config=None):
                 'question': {
                     'id': question.id,
                     'question': question.question,
-                    'answer': question.answer
+                    'answer': question.answer,
+                    'difficulty': question.difficulty,
+                    'category': question.category
                     },
             }), 200
         except:

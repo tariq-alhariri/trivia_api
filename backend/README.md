@@ -66,30 +66,262 @@ One note before you delve into your tasks: for each endpoint you are expected to
 8. Create a POST endpoint to get questions to play the quiz. This endpoint should take category and previous question parameters and return a random questions within the given category, if provided, and that is not one of the previous questions. 
 9. Create error handlers for all expected errors including 400, 404, 422 and 500. 
 
-REVIEW_COMMENT
-```
-This README is missing documentation of your endpoints. Below is an example for your endpoint to get all categories. Please use it as a reference for creating your documentation and resubmit your code. 
+## Documentation of the endpoints.
 
-Endpoints
-GET '/categories'
-GET ...
-POST ...
-DELETE ...
+
 
 GET '/categories'
-- Fetches a dictionary of categories in which the keys are the ids and the value is the corresponding string of the category
+- Fetches a dictionary of categories
 - Request Arguments: None
-- Returns: An object with a single key, categories, that contains a object of id: category_string key:value pairs. 
-{'1' : "Science",
-'2' : "Art",
-'3' : "Geography",
-'4' : "History",
-'5' : "Entertainment",
-'6' : "Sports"}
-
+- Response example:
 ```
-
-
+{
+    "categories": {
+        "1": "Science",
+        "2": "Art",
+        "3": "Geography",
+        "4": "History",
+        "5": "Entertainment",
+        "6": "Sports"
+    },
+    "status_code": 200,
+    "success": true
+}
+```
+GET '/questions?page=<page_number>'
+Fetches a paginated dictionary of questions of all categories
+- Request Arguments (optional): page:int 
+- Example response: 
+```
+{
+    "categories": {
+        "1": "Science",
+        "2": "Art",
+        "3": "Geography",
+        "4": "History",
+        "5": "Entertainment",
+        "6": "Sports"
+    },
+    "current_category": null,
+    "questions": [
+        {
+            "answer": "Alexander Fleming",
+            "category": 1,
+            "difficulty": 3,
+            "id": 21,
+            "question": "Who discovered penicillin?"
+        },
+        {
+            "answer": "Blood",
+            "category": 1,
+            "difficulty": 4,
+            "id": 22,
+            "question": "Hematology is a branch of medicine involving the study of what?"
+        }
+    ],
+    "success": true,
+    "total_questions": 12
+}
+```
+DELETE '/questions/<question_id>'
+Delete an existing questions from the rquestions
+- Request arguments: question_id:int 
+- Example response: 
+```
+{
+    "deleted": 11,
+    "questions": [
+        {
+            "answer": "George Washington Carver",
+            "category": 4,
+            "difficulty": 2,
+            "id": 12,
+            "question": "Who invented Peanut Butter?"
+        },
+        {
+            "answer": "Lake Victoria",
+            "category": 3,
+            "difficulty": 2,
+            "id": 13,
+            "question": "What is the largest lake in Africa?"
+        },
+        {
+            "answer": "The Palace of Versailles",
+            "category": 5,
+            "difficulty": 3,
+            "id": 14,
+            "question": "In which royal palace would you find the Hall of Mirrors?"
+        },
+        {
+            "answer": "Agra",
+            "category": 3,
+            "difficulty": 2,
+            "id": 15,
+            "question": "The Taj Mahal is located in which Indian city?"
+        },
+        {
+            "answer": "Escher",
+            "category": 2,
+            "difficulty": 1,
+            "id": 16,
+            "question": "Which Dutch graphic artist–initials M C was a creator of optical illusions?"
+        },
+        {
+            "answer": "Mona Lisa",
+            "category": 2,
+            "difficulty": 3,
+            "id": 17,
+            "question": "La Giaconda is better known as what?"
+        },
+        {
+            "answer": "One",
+            "category": 2,
+            "difficulty": 4,
+            "id": 18,
+            "question": "How many paintings did Van Gogh sell in his lifetime?"
+        },
+        {
+            "answer": "Jackson Pollock",
+            "category": 2,
+            "difficulty": 2,
+            "id": 19,
+            "question": "Which American artist was a pioneer of Abstract Expressionism, and a leading exponent of action painting?"
+        },
+        {
+            "answer": "The Liver",
+            "category": 1,
+            "difficulty": 4,
+            "id": 20,
+            "question": "What is the heaviest organ in the human body?"
+        },
+        {
+            "answer": "Alexander Fleming",
+            "category": 1,
+            "difficulty": 3,
+            "id": 21,
+            "question": "Who discovered penicillin?"
+        }
+    ],
+    "status_code": 200,
+    "success": true,
+    "total_questions": 11
+}
+```
+POST '/questions'
+Case1: 
+  Add a new question to the questions
+  - Request : {question:string, answer:string, difficulty:int, category:string}
+  - Example request :
+  ```
+   {
+    "question" : "How old are you?",
+    "answer" : 33,
+    "difficulty" : 4,
+    "category" : 4
+    }
+    ```
+  - Example response: 
+```
+{
+    "question_id": 37,
+    "status_code": 201,
+    "success": true
+}
+```
+Case2:
+  Search for questions that conatin a search term in all question
+  - Request : { "searchTerm" : string}
+  - Example request :
+  ```
+{
+    "searchTerm" : "age"
+}
+    ```
+  - Example response: 
+```
+{
+    "categories": {
+        "1": "Science",
+        "2": "Art",
+        "3": "Geography",
+        "4": "History",
+        "5": "Entertainment",
+        "6": "Sports"
+    },
+    "questions": [
+        {
+            "answer": "33",
+            "category": 4,
+            "difficulty": 4,
+            "id": 37,
+            "question": "How old are you?"
+        }
+    ],
+    "success": true,
+    "total_questions": 1
+}
+```
+GET '/categories/<int:category_id>/questions'
+Fetches a dictionary of questions with a specified category id
+- Request argument: category_id:int
+- Example response:
+```
+{
+    "questions": [
+        {
+            "answer": "Escher",
+            "category": 2,
+            "difficulty": 1,
+            "id": 16,
+            "question": "Which Dutch graphic artist–initials M C was a creator of optical illusions?"
+        },
+        {
+            "answer": "Mona Lisa",
+            "category": 2,
+            "difficulty": 3,
+            "id": 17,
+            "question": "La Giaconda is better known as what?"
+        },
+        {
+            "answer": "One",
+            "category": 2,
+            "difficulty": 4,
+            "id": 18,
+            "question": "How many paintings did Van Gogh sell in his lifetime?"
+        },
+        {
+            "answer": "Jackson Pollock",
+            "category": 2,
+            "difficulty": 2,
+            "id": 19,
+            "question": "Which American artist was a pioneer of Abstract Expressionism, and a leading exponent of action painting?"
+        }
+    ],
+    "success": true,
+    "total_questions": 4
+}
+```
+POST '/quizzes'
+Fetches one random question with a specified category. The asked questions ca not be asked again.
+- Request: {previous_questions: arr, quiz_category: {id:int, type:string}}
+- Example ruest: 
+```
+{ "previous_questions": [],"quiz_category":{"id":2} }
+```
+- Example response: 
+```
+{
+    "question": {
+        "answer": "Escher",
+        "category": 2,
+        "difficulty": 1,
+        "id": 16,
+        "question": "Which Dutch graphic artist–initials M C was a creator of optical illusions?"
+    },
+    "status_code": 200,
+    "success": true
+}
+```
 ## Testing
 To run the tests, run
 ```
